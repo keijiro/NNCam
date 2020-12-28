@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 051c412c8af926c4bb83188d07ee4457
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - _display: {instanceID: 0}
+  - _model: {fileID: 5022602860645237092, guid: 03f80938cbb3a4b17a9038b62fdedd32,
+      type: 3}
+  - _converter: {fileID: 7200000, guid: 326c8a5b8ac30474eb880d89c9b67fbe, type: 3}
+  - _mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+  - _shader: {fileID: 4800000, guid: 0eeaabc3b05c0bc4694eaad8939ec167, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
