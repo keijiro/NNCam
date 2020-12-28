@@ -50,7 +50,7 @@ sealed class CameraController : MonoBehaviour
     void Update()
     {
         // Retrieve the last results and draw the bounding boxes.
-        _detector.RetrieveResults(DrawBoundingBoxes);
+        DrawBoxes(_detector.RetrieveResults());
 
         // Input image cropping
         var aspect = (float)_webcam.height / _webcam.width;
@@ -68,20 +68,29 @@ sealed class CameraController : MonoBehaviour
         _detector.StartDetection(_buffer);
     }
 
-    void DrawBoundingBoxes(IList<BoundingBox> boxes)
+    MaterialPropertyBlock _mpblock;
+
+    void DrawBoxes(float[] boxes)
     {
-        foreach (var box in boxes)
+        if (_mpblock == null) _mpblock = new MaterialPropertyBlock();
+
+        if (boxes.Length == 0) return;
+        Debug.Log(boxes.Length);
+
+        var i = 0;
+        for (var y = 0; y < 26; y++)
         {
-            var dim = box.Dimensions;
+            for (var x = 0; x < 26; x++)
+            {
+                var v = boxes[i++];
+                _mpblock.SetColor("_Color", Color.red * Mathf.Clamp01(v) * 0.5f);
 
-            var t = math.float3(dim.X, dim.Y, 0);
-            var r = quaternion.identity;
-            var s = math.float3(dim.Width, dim.Height, 1);
+                var t = math.float3((x + 0.5f) / 26 - 0.5f, 0.5f - (y + 0.5f) / 26, 0);
+                var r = quaternion.identity;
+                var s = math.float3(1.0f / 26, 1.0f / 26, 1);
 
-            t.xy = math.float2(1, -1) * ((t.xy + s.xy / 2) / Size - 0.5f);
-            s.xy /= Size;
-
-            Graphics.DrawMesh(_mesh, float4x4.TRS(t, r, s), _material, 0);
+                Graphics.DrawMesh(_mesh, float4x4.TRS(t, r, s), _material, 0, null, 0, _mpblock);
+            }
         }
     }
 }

@@ -42,13 +42,10 @@ sealed class Detector : System.IDisposable
         }
     }
 
-    public void RetrieveResults(System.Action<IList<BoundingBox>> callback)
+    public float[] RetrieveResults()
     {
-        if (_worker.scheduleProgress < 1) return;
-        var output = _worker.PeekOutput(OUTPUT_NAME);
-        var results = ParseOutputs(output);
-        var boxes = FilterBoundingBoxes(results, 5, MINIMUM_CONFIDENCE);
-        callback(boxes);
+        if (_worker.scheduleProgress < 1) return new float [] {};
+        return _worker.PeekOutput(OUTPUT_NAME).AsFloats();
     }
 
     #endregion
@@ -59,8 +56,8 @@ sealed class Detector : System.IDisposable
 
 
 
-    const string INPUT_NAME = "image";
-    const string OUTPUT_NAME = "grid";
+    const string INPUT_NAME = "sub_2";
+    const string OUTPUT_NAME = "float_segments";
 
     public const int IMAGE_SIZE = 416;
     

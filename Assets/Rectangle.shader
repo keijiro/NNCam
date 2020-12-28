@@ -4,6 +4,8 @@ Shader "Hidden/Rectangle"
 
     #include "UnityCG.cginc"
 
+    float4 _Color;
+
     void Vertex(float4 position : POSITION,
                 float2 uv : TEXCOORD0,
                 out float4 outPosition : SV_Position,
@@ -16,19 +18,19 @@ Shader "Hidden/Rectangle"
     float4 Fragment(float4 position : SV_Position,
                     float2 uv : TEXCOORD0) : SV_Target
     {
-        const float width = 8;
-        uv = min(uv, 1 - uv);
-        float2 bd = uv / fwidth(uv);
-        if (min(bd.x, bd.y) > width) discard;
-        return float4(1, 0, 0, 1);
+        return _Color;
     }
 
     ENDCG
 
     SubShader
     {
+        Tags { "Queue" = "Overlay" }
         Pass
         {
+            Blend One One
+            ZWrite Off
+            ZTest Always
             CGPROGRAM
             #pragma vertex Vertex
             #pragma fragment Fragment
