@@ -1,11 +1,11 @@
-#pragma kernel Converter
+#pragma kernel ImageToTensor
 
 Texture2D<float4> _Image;
 RWBuffer<float3> _Tensor;
 uint _Width;
 
 [numthreads(8, 8, 1)]
-void Converter(uint3 id : SV_DispatchThreadID)
+void ImageToTensor(uint3 id : SV_DispatchThreadID)
 {
     uint2 pos = uint2(id.x, _Width - 1 - id.y);
     float3 rgb = _Image[pos].rgb * 255;

@@ -1,24 +1,41 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.Mathematics;
+using Unity.Barracuda;
+
+namespace NNCam {
 
 sealed class CameraController : MonoBehaviour
 {
+    #region Editable attributes
+
     [SerializeField] UnityEngine.UI.RawImage _preview = null;
     [SerializeField] UnityEngine.UI.RawImage _overlay = null;
 
+    #endregion
+
+    #region Hidden asset references
+
     [SerializeField, HideInInspector] Unity.Barracuda.NNModel _model = null;
     [SerializeField, HideInInspector] ComputeShader _converter = null;
-    [SerializeField, HideInInspector] Mesh _mesh = null;
-    [SerializeField, HideInInspector] Shader _shader;
 
-    const int Size = Detector.IMAGE_SIZE;
+    #endregion
+
+    #region Compile-time constants
+
+    public const int Size = 416;
+
+    #endregion
+
+    #region Internal objects
 
     WebCamTexture _webcam;
     RenderTexture _cropped;
     ComputeBuffer _buffer;
-    Detector _detector;
-    Material _material;
+    IWorker _worker;
+
+    #endregion
+
+    #region MonoBehaviour implementation
 
     void Start()
     {
@@ -28,8 +45,7 @@ sealed class CameraController : MonoBehaviour
         _preview.texture = _cropped = new RenderTexture(Size, Size, 0);
         _buffer = new ComputeBuffer(Size * Size * 3, sizeof(float));
 
-        _detector = new Detector(_model);
-        _material = new Material(_shader);
+        _worker = ModelLoader.Load(_model).CreateWorker();
     }
 
     void OnDisable()
@@ -37,21 +53,28 @@ sealed class CameraController : MonoBehaviour
         _buffer?.Dispose();
         _buffer = null;
 
-        _detector?.Dispose();
-        _detector = null;
+        _worker?.Dispose();
+        _worker = null;
     }
 
     void OnDestroy()
     {
         if (_webcam != null) Destroy(_webcam);
         if (_cropped != null) Destroy(_cropped);
-        if (_material != null) Destroy(_material);
+        if (_overlay.texture != null) Destroy(_overlay.texture);
     }
 
     void Update()
     {
-        // Retrieve the last results and draw the bounding boxes.
-        DrawBoxes(_detector.RetrieveResults());
+        // Check if the last task has been completed.
+        if (_worker.scheduleProgress >= 1)
+        {
+            // Replace the overlay texture with the output.
+            if (_overlay.texture != null) Destroy(_overlay.texture);
+            var output = _worker.PeekOutput("float_segments");
+            using (var segs = output.Reshape(new TensorShape(1, 26, 26, 1)))
+                _overlay.texture = segs.ToRenderTexture();
+        }
 
         // Input image cropping
         var aspect = (float)_webcam.height / _webcam.width;
@@ -65,35 +88,16 @@ sealed class CameraController : MonoBehaviour
         _converter.SetInt("_Width", Size);
         _converter.Dispatch(0, Size / 8, Size / 8, 1);
 
-        // Detection start
-        _detector.StartDetection(_buffer);
-    }
-
-
-    void DrawBoxes(RenderTexture rt)
-    {
-        if (rt == null) return;
-
-        if (_overlay.texture != null) Destroy(_overlay.texture);
-
-        _overlay.texture = rt;
-
-/*
-        var i = 0;
-        for (var y = 0; y < 26; y++)
+        // New task scheduling
+        using (var tensor = new Tensor(1, Size, Size, 3, _buffer))
         {
-            for (var x = 0; x < 26; x++)
-            {
-                var v = boxes[i++];
-                _mpblock.SetColor("_Color", Color.red * Mathf.Clamp01(v) * 0.5f);
-
-                var t = math.float3((x + 0.5f) / 26 - 0.5f, 0.5f - (y + 0.5f) / 26, 0);
-                var r = quaternion.identity;
-                var s = math.float3(1.0f / 26, 1.0f / 26, 1);
-
-                Graphics.DrawMesh(_mesh, float4x4.TRS(t, r, s), _material, 0, null, 0, _mpblock);
-            }
+            var inputs = new Dictionary<string, Tensor> {{ "sub_2", tensor }};
+            _worker.Execute(inputs);
+            _worker.FlushSchedule();
         }
-        */
     }
+
+    #endregion
 }
+
+} // namespace NNCam

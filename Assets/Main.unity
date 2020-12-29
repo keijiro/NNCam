@@ -261,8 +261,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.15660381, b: 0.15660381, a: 1}
+  m_Material: {fileID: 2100000, guid: f93977c0bd01b0a4490b6b547c9e4160, type: 2}
+  m_Color: {r: 0.7529412, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -317,8 +317,6 @@ MonoBehaviour:
   _overlay: {fileID: 434769644}
   _model: {fileID: 5022602860645237092, guid: 7db629ed21734d9489d40ac0f694dc30, type: 3}
   _converter: {fileID: 7200000, guid: 326c8a5b8ac30474eb880d89c9b67fbe, type: 3}
-  _mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-  _shader: {fileID: 4800000, guid: 0eeaabc3b05c0bc4694eaad8939ec167, type: 3}
 --- !u!4 &554326608
 Transform:
   m_ObjectHideFlags: 0
