@@ -1,14 +1,19 @@
 #pragma kernel ImageToTensor
 
-Texture2D<float4> _Image;
+sampler2D _Texture;
 RWBuffer<float3> _Tensor;
-uint _Width;
+uint _Width, _Height;
 
 [numthreads(8, 8, 1)]
 void ImageToTensor(uint3 id : SV_DispatchThreadID)
 {
-    uint2 pos = uint2(id.x, _Width - 1 - id.y);
-    float3 rgb = _Image[pos].rgb * 255;
+    float2 uv = (id.xy + 0.5) / float2(_Width, _Height);
+    uv.y = 1 - uv.y;
+
+    float2 dx = float2(1.0 / _Width, 0);
+    float2 dy = float2(0, -1.0 / _Height);
+
+    float3 rgb = tex2Dgrad(_Texture, uv, dx, dy).rgb * 255;
 
     uint offs = (id.y * _Width + id.x) * 3;
     _Tensor[offs + 0] = rgb.r;
