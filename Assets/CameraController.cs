@@ -6,13 +6,6 @@ namespace NNCam {
 
 sealed class CameraController : MonoBehaviour
 {
-    #region Editable attributes
-
-    [SerializeField] UnityEngine.UI.RawImage _preview = null;
-    [SerializeField] UnityEngine.UI.RawImage _overlay = null;
-
-    #endregion
-
     #region Hidden asset references
 
     [SerializeField, HideInInspector] Unity.Barracuda.NNModel _model = null;
@@ -33,6 +26,7 @@ sealed class CameraController : MonoBehaviour
     ComputeBuffer _buffer;
     RenderTexture _mask;
     IWorker _worker;
+    Material _material;
 
     #endregion
 
@@ -41,10 +35,12 @@ sealed class CameraController : MonoBehaviour
     void Start()
     {
         _webcam = new WebCamTexture();
-        _webcam.Play();
-        _preview.texture = _webcam;
         _buffer = new ComputeBuffer(Width * Height * 3, sizeof(float));
         _worker = ModelLoader.Load(_model).CreateWorker();
+        _material = GetComponent<Renderer>().material;
+
+        _webcam.Play();
+        _material.SetTexture("_SourceTex", _webcam);
     }
 
     void OnDisable()
@@ -70,7 +66,10 @@ sealed class CameraController : MonoBehaviour
             if (_mask != null) Destroy(_mask);
             var output = _worker.PeekOutput("float_segments");
             using (var segs = output.Reshape(new TensorShape(1, 23, 40, 1)))
-                _overlay.texture = _mask = segs.ToRenderTexture();
+            {
+                _mask = segs.ToRenderTexture();
+                _material.SetTexture("_MaskTex", _mask);
+            }
         }
 
         // Image to tensor conversion
