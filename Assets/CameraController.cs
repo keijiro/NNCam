@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.Barracuda;
 
@@ -24,9 +23,9 @@ sealed class CameraController : MonoBehaviour
 
     WebCamTexture _webcam;
     ComputeBuffer _buffer;
-    RenderTexture _mask;
     IWorker _worker;
-    Material _material;
+    RenderTexture _mask;
+    MaterialPropertyBlock _props;
 
     #endregion
 
@@ -35,12 +34,13 @@ sealed class CameraController : MonoBehaviour
     void Start()
     {
         _webcam = new WebCamTexture();
+        _webcam.Play();
+
         _buffer = new ComputeBuffer(Width * Height * 3, sizeof(float));
         _worker = ModelLoader.Load(_model).CreateWorker();
-        _material = GetComponent<Renderer>().material;
 
-        _webcam.Play();
-        _material.SetTexture("_SourceTex", _webcam);
+        _props = new MaterialPropertyBlock();
+        _props.SetTexture("_CameraTex", _webcam);
     }
 
     void OnDisable()
@@ -67,8 +67,10 @@ sealed class CameraController : MonoBehaviour
             var output = _worker.PeekOutput("float_segments");
             using (var segs = output.Reshape(new TensorShape(1, 23, 40, 1)))
             {
-                _mask = segs.ToRenderTexture();
-                _material.SetTexture("_MaskTex", _mask);
+                // Bake into a render texture with normalizing into [0, 1].
+                _mask = segs.ToRenderTexture(0, 0, 1.0f / 32, 0.5f);
+                _props.SetTexture("_MaskTex", _mask);
+                GetComponent<Renderer>().SetPropertyBlock(_props);
             }
         }
 
@@ -81,11 +83,7 @@ sealed class CameraController : MonoBehaviour
 
         // New task scheduling
         using (var tensor = new Tensor(1, Height, Width, 3, _buffer))
-        {
-            var inputs = new Dictionary<string, Tensor> {{ "sub_2", tensor }};
-            _worker.Execute(inputs);
-            _worker.FlushSchedule();
-        }
+            _worker.Execute(tensor);
     }
 
     #endregion
