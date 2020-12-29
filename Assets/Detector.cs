@@ -42,10 +42,12 @@ sealed class Detector : System.IDisposable
         }
     }
 
-    public float[] RetrieveResults()
+    public UnityEngine.RenderTexture RetrieveResults()
     {
-        if (_worker.scheduleProgress < 1) return new float [] {};
-        return _worker.PeekOutput(OUTPUT_NAME).AsFloats();
+        if (_worker.scheduleProgress < 1) return null;
+        var output = _worker.PeekOutput(OUTPUT_NAME);
+        using (var re = output.Reshape(new TensorShape(1, 26, 26, 1)))
+            return re.ToRenderTexture();
     }
 
     #endregion

@@ -4,7 +4,8 @@ using Unity.Mathematics;
 
 sealed class CameraController : MonoBehaviour
 {
-    [SerializeField] UnityEngine.UI.RawImage _display = null;
+    [SerializeField] UnityEngine.UI.RawImage _preview = null;
+    [SerializeField] UnityEngine.UI.RawImage _overlay = null;
 
     [SerializeField, HideInInspector] Unity.Barracuda.NNModel _model = null;
     [SerializeField, HideInInspector] ComputeShader _converter = null;
@@ -24,7 +25,7 @@ sealed class CameraController : MonoBehaviour
         _webcam = new WebCamTexture();
         _webcam.Play();
 
-        _display.texture = _cropped = new RenderTexture(Size, Size, 0);
+        _preview.texture = _cropped = new RenderTexture(Size, Size, 0);
         _buffer = new ComputeBuffer(Size * Size * 3, sizeof(float));
 
         _detector = new Detector(_model);
@@ -68,15 +69,16 @@ sealed class CameraController : MonoBehaviour
         _detector.StartDetection(_buffer);
     }
 
-    MaterialPropertyBlock _mpblock;
 
-    void DrawBoxes(float[] boxes)
+    void DrawBoxes(RenderTexture rt)
     {
-        if (_mpblock == null) _mpblock = new MaterialPropertyBlock();
+        if (rt == null) return;
 
-        if (boxes.Length == 0) return;
-        Debug.Log(boxes.Length);
+        if (_overlay.texture != null) Destroy(_overlay.texture);
 
+        _overlay.texture = rt;
+
+/*
         var i = 0;
         for (var y = 0; y < 26; y++)
         {
@@ -92,5 +94,6 @@ sealed class CameraController : MonoBehaviour
                 Graphics.DrawMesh(_mesh, float4x4.TRS(t, r, s), _material, 0, null, 0, _mpblock);
             }
         }
+        */
     }
 }
