@@ -39,7 +39,10 @@ Shader "NNCam/Composition"
         // Apply a sigmoid activator to the mask value.
         mask = 1 / (1 + exp(-mask));
 
-        return float4(lerp(bg, fg, smoothstep(_Threshold, 1, mask)), 1);
+        // Apply the threshold
+        float th1 = max(0, _Threshold - 0.1);
+        float th2 = min(1, _Threshold + 0.1);
+        return float4(lerp(bg, fg, smoothstep(th1, th2, mask)), 1);
     }
 
     ENDCG

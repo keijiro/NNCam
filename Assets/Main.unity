@@ -293,5 +293,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _architecture: 0
   _model: {fileID: 5022602860645237092, guid: 1f792b99e1f313d4c8f1ebec6307c6be, type: 3}
-  _threshold: 0.5
+  _threshold: 0.6
   _converter: {fileID: 7200000, guid: 326c8a5b8ac30474eb880d89c9b67fbe, type: 3}
