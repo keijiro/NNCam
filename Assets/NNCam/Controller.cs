@@ -48,7 +48,7 @@ sealed class Controller : MonoBehaviour
         _webcam = new WebCamTexture();
         _webcam.Play();
 
-        _delayed = new RenderTexture(_webcam.width, _webcam.height, 0);
+        _delayed = new RenderTexture(1920, 1080, 0);
 
         _buffer = new ComputeBuffer(Width * Height * 3, sizeof(float));
         _worker = ModelLoader.Load(_model).CreateWorker();
@@ -74,6 +74,9 @@ sealed class Controller : MonoBehaviour
 
     void Update()
     {
+        // Do nothing if there is no update.
+        if (!_webcam.didUpdateThisFrame) return;
+
         // Preprocessing and image-to-tensor conversion
         var kernel = (int)_architecture;
         _converter.SetTexture(kernel, "_Texture", _webcam);
