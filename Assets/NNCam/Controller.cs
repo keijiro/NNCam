@@ -77,9 +77,15 @@ sealed class Controller : MonoBehaviour
         // Do nothing if there is no update.
         if (!_webcam.didUpdateThisFrame) return;
 
+        // Update the delay buffer.
+        var vflip = _webcam.videoVerticallyMirrored;
+        var scale = new Vector2(1, vflip ? -1 : 1);
+        var offset = new Vector2(0, vflip ? 1 : 0);
+        Graphics.Blit(_webcam, _delayed, scale, offset);
+
         // Preprocessing and image-to-tensor conversion
         var kernel = (int)_architecture;
-        _converter.SetTexture(kernel, "_Texture", _webcam);
+        _converter.SetTexture(kernel, "_Texture", _delayed);
         _converter.SetBuffer(kernel, "_Tensor", _buffer);
         _converter.SetInt("_Width", Width);
         _converter.SetInt("_Height", Height);
@@ -103,9 +109,6 @@ sealed class Controller : MonoBehaviour
         // Material property update
         _props.SetFloat("_Threshold", _threshold);
         GetComponent<Renderer>().SetPropertyBlock(_props);
-
-        // Delay the webcam preview update.
-        Graphics.Blit(_webcam, _delayed);
     }
 
     #endregion
