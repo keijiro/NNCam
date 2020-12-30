@@ -24,8 +24,10 @@ How To Run
 ----------
 
 The ONNX model file is not contained in this repository to avoid hitting the
-storage quota. Run [this Colab notebook] to convert the original BodyPix models
-to ONNX, then put the output file into `Assets/ONNX`.
+storage quota. You can download the ONNX files from the [Releases page]. Or
+you can run [this Colab notebook] to convert the original BodyPix models
+to ONNX.
 
+[Releases page]: https://github.com/keijiro/NNCam/releases/tag/v0.0.1
 [this Colab notebook]:
   https://colab.research.google.com/drive/1ikOMoqOX7TSBNId0lGaQ_kIyDF2GV3M3?usp=sharing 
