@@ -3,11 +3,19 @@ using Unity.Barracuda;
 
 namespace NNCam {
 
-sealed class CameraController : MonoBehaviour
+sealed class Controller : MonoBehaviour
 {
-    #region Hidden asset references
+    #region Enum definitions
 
-    [SerializeField, HideInInspector] Unity.Barracuda.NNModel _model = null;
+    enum Architecture { MobileNetV1, ResNet50 }
+
+    #endregion
+
+    #region Editable attributes
+
+    [SerializeField] Architecture _architecture = Architecture.MobileNetV1;
+    [SerializeField] Unity.Barracuda.NNModel _model = null;
+    [SerializeField, Range(0.01f, 0.99f)] float _threshold = 0.5f;
     [SerializeField, HideInInspector] ComputeShader _converter = null;
 
     #endregion
@@ -65,25 +73,30 @@ sealed class CameraController : MonoBehaviour
             // Replace the overlay texture with the output.
             if (_mask != null) Destroy(_mask);
             var output = _worker.PeekOutput("float_segments");
-            using (var segs = output.Reshape(new TensorShape(1, 23, 40, 1)))
+            var (w, h) = (output.shape.sequenceLength, output.shape.height);
+            using (var segs = output.Reshape(new TensorShape(1, h, w, 1)))
             {
                 // Bake into a render texture with normalizing into [0, 1].
                 _mask = segs.ToRenderTexture(0, 0, 1.0f / 32, 0.5f);
                 _props.SetTexture("_MaskTex", _mask);
-                GetComponent<Renderer>().SetPropertyBlock(_props);
             }
         }
 
         // Image to tensor conversion
-        _converter.SetTexture(0, "_Texture", _webcam);
-        _converter.SetBuffer(0, "_Tensor", _buffer);
+        var kernel = (int)_architecture;
+        _converter.SetTexture(kernel, "_Texture", _webcam);
+        _converter.SetBuffer(kernel, "_Tensor", _buffer);
         _converter.SetInt("_Width", Width);
         _converter.SetInt("_Height", Height);
-        _converter.Dispatch(0, Width / 8, Height / 8, 1);
+        _converter.Dispatch(kernel, Width / 8, Height / 8, 1);
 
         // New task scheduling
         using (var tensor = new Tensor(1, Height, Width, 3, _buffer))
             _worker.Execute(tensor);
+
+        // Material property update
+        _props.SetFloat("_Threshold", _threshold);
+        GetComponent<Renderer>().SetPropertyBlock(_props);
     }
 
     #endregion

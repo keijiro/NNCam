@@ -1,11 +1,11 @@
-Shader "NNCam/Preview"
+Shader "NNCam/Composition"
 {
     Properties
     {
         _BackgroundTex("Background", 2D) = ""{}
-        _Threshold("Threshold", Range(0, 1)) = 0.5
-        [HideInInspector] _CameraTex("", 2D) = ""{}
-        [HideInInspector] _MaskTex("", 2D) = ""{}
+        [HideInInspector] _CameraTex("Camera", 2D) = ""{}
+        [HideInInspector] _MaskTex("Mask", 2D) = ""{}
+        [HideInInspector] _Threshold("Threshold", Range(0, 1)) = 0.5
     }
 
     CGINCLUDE
@@ -13,11 +13,10 @@ Shader "NNCam/Preview"
     #include "UnityCG.cginc"
 
     sampler2D _BackgroundTex;
-    float _Threshold;
-
     sampler2D _CameraTex;
     sampler2D _MaskTex;
     float4 _MaskTex_TexelSize;
+    float _Threshold;
 
     void Vertex(float4 position : POSITION,
                 float2 uv : TEXCOORD0,
@@ -35,7 +34,7 @@ Shader "NNCam/Preview"
         float3 bg = tex2D(_BackgroundTex, uv).rgb;
 
         // Hack: Slide UVs to fit the mask to the camera texture.
-        float2 mask_uv = uv + _MaskTex_TexelSize * float2(0.5 , -0.5);
+        float2 mask_uv = uv;// + _MaskTex_TexelSize * float2(0.5 , -0.5);
 
         // Sample the mask texture and un-normalize the value.
         float mask = (tex2D(_MaskTex, mask_uv).r - 0.5) * 32;
