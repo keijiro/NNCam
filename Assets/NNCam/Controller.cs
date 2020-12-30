@@ -33,6 +33,7 @@ sealed class Controller : MonoBehaviour
     #region Internal objects
 
     WebCamTexture _webcam;
+    RenderTexture _delayed;
     ComputeBuffer _buffer;
     IWorker _worker;
     RenderTexture _mask;
@@ -47,11 +48,13 @@ sealed class Controller : MonoBehaviour
         _webcam = new WebCamTexture();
         _webcam.Play();
 
+        _delayed = new RenderTexture(_webcam.width, _webcam.height, 0);
+
         _buffer = new ComputeBuffer(Width * Height * 3, sizeof(float));
         _worker = ModelLoader.Load(_model).CreateWorker();
 
         _props = new MaterialPropertyBlock();
-        _props.SetTexture("_CameraTex", _webcam);
+        _props.SetTexture("_CameraTex", _delayed);
     }
 
     void OnDisable()
@@ -65,27 +68,13 @@ sealed class Controller : MonoBehaviour
     void OnDestroy()
     {
         if (_webcam != null) Destroy(_webcam);
+        if (_delayed != null) Destroy(_delayed);
         if (_mask != null) Destroy(_mask);
     }
 
     void Update()
     {
-        // Check if the last task has been completed.
-        if (_worker.scheduleProgress >= 1)
-        {
-            // Replace the overlay texture with the output.
-            if (_mask != null) Destroy(_mask);
-            var output = _worker.PeekOutput("float_segments");
-            var (w, h) = (output.shape.sequenceLength, output.shape.height);
-            using (var segs = output.Reshape(new TensorShape(1, h, w, 1)))
-            {
-                // Bake into a render texture with normalizing into [0, 1].
-                _mask = segs.ToRenderTexture(0, 0, 1.0f / 32, 0.5f);
-                _props.SetTexture("_MaskTex", _mask);
-            }
-        }
-
-        // Image to tensor conversion
+        // Preprocessing and image-to-tensor conversion
         var kernel = (int)_architecture;
         _converter.SetTexture(kernel, "_Texture", _webcam);
         _converter.SetBuffer(kernel, "_Tensor", _buffer);
@@ -93,13 +82,27 @@ sealed class Controller : MonoBehaviour
         _converter.SetInt("_Height", Height);
         _converter.Dispatch(kernel, Width / 8 + 1, Height / 8 + 1, 1);
 
-        // New task scheduling
+        // Schedule a task to the worker.
         using (var tensor = new Tensor(1, Height, Width, 3, _buffer))
             _worker.Execute(tensor);
+
+        // Replace the overlay texture with the output.
+        if (_mask != null) Destroy(_mask);
+        var output = _worker.PeekOutput("float_segments");
+        var (w, h) = (output.shape.sequenceLength, output.shape.height);
+        using (var segs = output.Reshape(new TensorShape(1, h, w, 1)))
+        {
+            // Bake into a render texture with normalizing into [0, 1].
+            _mask = segs.ToRenderTexture(0, 0, 1.0f / 32, 0.5f);
+            _props.SetTexture("_MaskTex", _mask);
+        }
 
         // Material property update
         _props.SetFloat("_Threshold", _threshold);
         GetComponent<Renderer>().SetPropertyBlock(_props);
+
+        // Delay the webcam preview update.
+        Graphics.Blit(_webcam, _delayed);
     }
 
     #endregion
