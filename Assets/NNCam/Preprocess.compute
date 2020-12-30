@@ -27,12 +27,14 @@ void OutputElement(uint3 id, float3 rgb)
 [numthreads(8, 8, 1)]
 void PreprocessImageNetV1(uint3 id : SV_DispatchThreadID)
 {
+    if (any(id.xy >= uint2(_Width, _Height))) return;
     OutputElement(id, SampleInput(id) * 2 - 1);
 }
 
 [numthreads(8, 8, 1)]
 void PreprocessResNet50(uint3 id : SV_DispatchThreadID)
 {
+    if (any(id.xy >= uint2(_Width, _Height))) return;
     const float3 kImageNetMean = float3(-123.15, -115.90, -103.06);
     OutputElement(id, SampleInput(id) * 255 + kImageNetMean);
 }

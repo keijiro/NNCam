@@ -33,11 +33,8 @@ Shader "NNCam/Composition"
         float3 fg = tex2D(_CameraTex, uv).rgb;
         float3 bg = tex2D(_BackgroundTex, uv).rgb;
 
-        // Hack: Slide UVs to fit the mask to the camera texture.
-        float2 mask_uv = uv;// + _MaskTex_TexelSize * float2(0.5 , -0.5);
-
         // Sample the mask texture and un-normalize the value.
-        float mask = (tex2D(_MaskTex, mask_uv).r - 0.5) * 32;
+        float mask = (tex2D(_MaskTex, uv).r - 0.5) * 32;
 
         // Apply a sigmoid activator to the mask value.
         mask = 1 / (1 + exp(-mask));

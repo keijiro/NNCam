@@ -22,8 +22,11 @@ sealed class Controller : MonoBehaviour
 
     #region Compile-time constants
 
-    public const int Width = 640;
-    public const int Height = 360;
+    // We use a bit strange aspect ratio (20:11) because we have to use 16n+1
+    // for these dimension values. It may distort input images a bit, but it
+    // might not be a problem for the segmentation models.
+    public const int Width = 640 + 1;
+    public const int Height = 352 + 1;
 
     #endregion
 
@@ -88,7 +91,7 @@ sealed class Controller : MonoBehaviour
         _converter.SetBuffer(kernel, "_Tensor", _buffer);
         _converter.SetInt("_Width", Width);
         _converter.SetInt("_Height", Height);
-        _converter.Dispatch(kernel, Width / 8, Height / 8, 1);
+        _converter.Dispatch(kernel, Width / 8 + 1, Height / 8 + 1, 1);
 
         // New task scheduling
         using (var tensor = new Tensor(1, Height, Width, 3, _buffer))
