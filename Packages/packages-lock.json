@@ -27,14 +27,12 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
-    "com.unity.ugui": {
+    "jp.keijiro.noiseshader": {
       "version": "1.0.0",
       "depth": 0,
-      "source": "builtin",
-      "dependencies": {
-        "com.unity.modules.ui": "1.0.0",
-        "com.unity.modules.imgui": "1.0.0"
-      }
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://registry.npmjs.com"
     },
     "com.unity.modules.audio": {
       "version": "1.0.0",
@@ -48,19 +46,7 @@
       "source": "builtin",
       "dependencies": {}
     },
-    "com.unity.modules.imgui": {
-      "version": "1.0.0",
-      "depth": 0,
-      "source": "builtin",
-      "dependencies": {}
-    },
     "com.unity.modules.jsonserialize": {
-      "version": "1.0.0",
-      "depth": 1,
-      "source": "builtin",
-      "dependencies": {}
-    },
-    "com.unity.modules.ui": {
       "version": "1.0.0",
       "depth": 1,
       "source": "builtin",
