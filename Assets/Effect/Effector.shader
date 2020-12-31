@@ -2,9 +2,9 @@ Shader "Hidden/NNCam/Effector"
 {
     Properties
     {
-        _Feedback("", 2D) = ""{}
-        _CameraFeed("", 2D) = ""{}
-        _Mask("", 2D) = ""{}
+        _MainTex("", 2D) = ""{}
+        _FeedbackTex("", 2D) = ""{}
+        _MaskTex("", 2D) = ""{}
     }
 
     CGINCLUDE
@@ -12,10 +12,27 @@ Shader "Hidden/NNCam/Effector"
     #include "UnityCG.cginc"
     #include "Packages/jp.keijiro.noiseshader/Shader/SimplexNoise3D.hlsl"
 
-    sampler2D _Feedback;
-    sampler2D _CameraFeed;
-    sampler2D _Mask;
-    float _Threshold;
+    sampler2D _MainTex;
+    sampler2D _FeedbackTex;
+    sampler2D _MaskTex;
+    float2 _Feedback; // length, decay
+    float3 _Noise;    // frequency, speed, amount
+
+    float2 DFNoise(float2 uv, float3 freq)
+    {
+        float3 np = float3(uv, _Time.y) * freq;
+        float2 n1 = snoise_grad(np).xy;
+        return cross(float3(n1, 0), float3(0, 0, 1)).xy;
+    }
+
+    float2 Displacement(float2 uv)
+    {
+        float aspect = _ScreenParams.x / _ScreenParams.y;
+        float2 p = uv * float2(aspect, 1);
+        float2 n = DFNoise(p, _Noise.xxy * -1) * _Noise.z +
+                   DFNoise(p, _Noise.xxy * +2) * _Noise.z * 0.5;
+        return n * float2(1, aspect);
+    }
 
     void Vertex(float4 position : POSITION,
                 float2 uv : TEXCOORD0,
@@ -29,24 +46,15 @@ Shader "Hidden/NNCam/Effector"
     float4 Fragment(float4 position : SV_Position,
                     float2 uv : TEXCOORD0) : SV_Target
     {
-        float2 uv2 = (uv - 0.5) * float2(1, 1) + 0.5;
+        float3 camera = tex2D(_MainTex, uv).rgb;
+        float4 feedback = tex2D(_FeedbackTex, uv + Displacement(uv));
 
-        float2 n1 = snoise_grad(float3(uv2 * 1.8174 + 3.1784, _Time.y * 0.3)).xy;
-        float2 n2 = cross(float3(n1, 0), float3(0, 0, 1)).xy;
+        float mask = smoothstep(0.9, 1, tex2D(_MaskTex, uv).r);
 
-        uv2 += n2 * 0.004;
+        float alpha = lerp(feedback.a * (1 - _Feedback.y), _Feedback.x, mask);
+        float3 rgb = lerp(camera, feedback.rgb, saturate(alpha) * (1 - mask));
 
-        float4 bg = tex2D(_Feedback, uv2);// * 0.99;
-        bg.a *= 0.99;
-        float4 fg = tex2D(_CameraFeed, uv);
-        float mask = tex2D(_Mask, uv).r;
-        float th1 = max(0, _Threshold - 0.1);
-        float th2 = min(1, _Threshold + 0.1);
-        mask = smoothstep(th1, th2, mask);
-
-        bg = float4(lerp(fg.rgb, bg.rgb, saturate(bg.a)), bg.a);
-
-        return lerp(bg, float4(fg.rgb, 3), mask);
+        return float4(rgb, alpha);
     }
 
     ENDCG

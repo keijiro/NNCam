@@ -212,8 +212,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inputStream: {fileID: 423862738}
-  _threshold: 0.99
   _shader: {fileID: 4800000, guid: 4d4d27379aecc9d41aef1fa959c0cc69, type: 3}
+  _feedbackLength: 3
+  _feedbackDecay: 1
+  _noiseFrequency: 1.2
+  _noiseSpeed: 0.2
+  _noiseAmount: 2.3
 --- !u!114 &423862738
 MonoBehaviour:
   m_ObjectHideFlags: 0
