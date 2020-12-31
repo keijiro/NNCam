@@ -1,21 +1,19 @@
-Shader "NNCam/Composition"
+Shader "Hidden/NNCam/Compositor"
 {
     Properties
     {
-        _BackgroundTex("Background", 2D) = ""{}
-        [HideInInspector] _CameraTex("Camera", 2D) = ""{}
-        [HideInInspector] _MaskTex("Mask", 2D) = ""{}
-        [HideInInspector] _Threshold("Threshold", Range(0, 1)) = 0.5
+        _Background("", 2D) = ""{}
+        _CameraFeed("", 2D) = ""{}
+        _Mask("", 2D) = ""{}
     }
 
     CGINCLUDE
 
     #include "UnityCG.cginc"
 
-    sampler2D _BackgroundTex;
-    sampler2D _CameraTex;
-    sampler2D _MaskTex;
-    float4 _MaskTex_TexelSize;
+    sampler2D _Background;
+    sampler2D _CameraFeed;
+    sampler2D _Mask;
     float _Threshold;
 
     void Vertex(float4 position : POSITION,
@@ -30,16 +28,9 @@ Shader "NNCam/Composition"
     float4 Fragment(float4 position : SV_Position,
                     float2 uv : TEXCOORD0) : SV_Target
     {
-        float3 fg = tex2D(_CameraTex, uv).rgb;
-        float3 bg = tex2D(_BackgroundTex, uv).rgb;
-
-        // Sample the mask texture and un-normalize the value.
-        float mask = (tex2D(_MaskTex, uv).r - 0.5) * 32;
-
-        // Apply a sigmoid activator to the mask value.
-        mask = 1 / (1 + exp(-mask));
-
-        // Apply the threshold
+        float3 bg = tex2D(_Background, uv).rgb;
+        float3 fg = tex2D(_CameraFeed, uv).rgb;
+        float mask = tex2D(_Mask, uv).r;
         float th1 = max(0, _Threshold - 0.1);
         float th2 = min(1, _Threshold + 0.1);
         return float4(lerp(bg, fg, smoothstep(th1, th2, mask)), 1);
