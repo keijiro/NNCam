@@ -4,17 +4,39 @@ namespace NNCam {
 
 sealed class Effector : MonoBehaviour
 {
+    #region Editor only attributes
+
     [SerializeField] InputStream _inputStream = null;
     [SerializeField, HideInInspector] Shader _shader = null;
+
+    #endregion
+
+    #region Editable properties
+
     [SerializeField] float _feedbackLength = 3;
     [SerializeField] float _feedbackDecay = 1;
     [SerializeField] float _noiseFrequency = 1;
     [SerializeField] float _noiseSpeed = 1;
     [SerializeField] float _noiseAmount = 1;
 
-    (RenderTexture rt1, RenderTexture rt2) _buffer;
+    float FeedbackLength
+      { get => _feedbackLength; set => _feedbackLength = value; }
 
-    Material _material;
+    float FeedbackDecay
+      { get => _feedbackDecay; set => _feedbackDecay = value; }
+
+    float NoiseFrequency
+      { get => _noiseFrequency; set => _noiseFrequency = value; }
+
+    float NoiseSpeed
+      { get => _noiseSpeed; set => _noiseSpeed = value; }
+
+    float NoiseAmount
+      { get => _noiseAmount; set => _noiseAmount = value; }
+
+    #endregion
+
+    #region Private members
 
     RenderTexture NewBuffer()
       => new RenderTexture(1920, 1080, 0, RenderTextureFormat.ARGBHalf);
@@ -24,6 +46,13 @@ sealed class Effector : MonoBehaviour
 
     Vector3 NoiseParamsVector
       => new Vector3(_noiseFrequency, _noiseSpeed, _noiseAmount / 1000);
+
+    (RenderTexture rt1, RenderTexture rt2) _buffer;
+    Material _material;
+
+    #endregion
+
+    #region MonoBehaviour implementation
 
     void Start()
     {
@@ -54,6 +83,8 @@ sealed class Effector : MonoBehaviour
         // Double buffer swapping
         _buffer = (_buffer.rt2, _buffer.rt1);
     }
+
+    #endregion
 }
 
 } // namespace NNCam
