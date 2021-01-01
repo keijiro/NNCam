@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace NNCam {
 
-sealed class Effector : MonoBehaviour
+public sealed class Effector : MonoBehaviour
 {
     #region Editor only attributes
 
@@ -19,19 +19,19 @@ sealed class Effector : MonoBehaviour
     [SerializeField] float _noiseSpeed = 1;
     [SerializeField] float _noiseAmount = 1;
 
-    float FeedbackLength
+    public float FeedbackLength
       { get => _feedbackLength; set => _feedbackLength = value; }
 
-    float FeedbackDecay
+    public float FeedbackDecay
       { get => _feedbackDecay; set => _feedbackDecay = value; }
 
-    float NoiseFrequency
+    public float NoiseFrequency
       { get => _noiseFrequency; set => _noiseFrequency = value; }
 
-    float NoiseSpeed
+    public float NoiseSpeed
       { get => _noiseSpeed; set => _noiseSpeed = value; }
 
-    float NoiseAmount
+    public float NoiseAmount
       { get => _noiseAmount; set => _noiseAmount = value; }
 
     #endregion
