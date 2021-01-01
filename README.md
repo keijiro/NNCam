@@ -2,6 +2,7 @@ NNCam
 =====
 
 ![gif](https://i.imgur.com/N5jlFLy.gif)
+![gif](https://i.imgur.com/j0aDZxC.gif)
 
 **NNCam** is a Unity sample project that implements a virtual background
 feature (background removal for webcams) using the [Barracuda] inference
