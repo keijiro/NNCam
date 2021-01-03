@@ -103,7 +103,7 @@ sealed class InputStream : MonoBehaviour
             _worker.Execute(tensor);
 
         // BodyPix output retrieval
-        var output = _worker.PeekOutput();
+        var output = _worker.PeekOutput("float_segments");
         var (w, h) = (output.shape.sequenceLength, output.shape.height);
         using (var segs = output.Reshape(new TensorShape(1, h, w, 1)))
         {
