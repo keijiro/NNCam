@@ -3,8 +3,11 @@
 #define PARTS_COUNT 17
 
 texture2D _Heatmaps;
+texture2D _Offsets;
 uint2 _Dimensions;
-RWBuffer<uint2> _HeatmapPositions;
+uint _Stride;
+
+RWBuffer<float2> _KeyPoints;
 
 float SampleHeatmap(uint x, uint y, uint part)
 {
@@ -31,5 +34,11 @@ void DecodePose(uint3 id : SV_DispatchThreadID)
         }
     }
 
-    _HeatmapPositions[id.x] = max_pos;
+    uint2 base = max_pos * uint2(PARTS_COUNT * 2, 1);
+    uint2 ix = base + uint2(id.x + PARTS_COUNT, 0);
+    uint2 iy = base + uint2(id.x, 0);
+
+    float2 offs = float2(_Offsets[ix].x, -_Offsets[iy].x);
+
+    _KeyPoints[id.x] = (max_pos + offs / _Stride + 0.5) / _Dimensions;
 }

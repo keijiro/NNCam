@@ -153,8 +153,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59d8adef5f701ca4cb99d94e50bf1b9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _architecture: 1
-  _model: {fileID: 5022602860645237092, guid: 56efa733f39043f43aa491a48434e084, type: 3}
+  _architecture: 0
+  _model: {fileID: 5022602860645237092, guid: 1f792b99e1f313d4c8f1ebec6307c6be, type: 3}
   _preprocessor: {fileID: 7200000, guid: 326c8a5b8ac30474eb880d89c9b67fbe, type: 3}
   _decoder: {fileID: 7200000, guid: 09ec9ab52d682ee439e87e19e8fab712, type: 3}
   _visualizerShader: {fileID: 4800000, guid: 75477d00316398744a0831d604c212cb, type: 3}

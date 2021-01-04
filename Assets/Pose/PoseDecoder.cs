@@ -29,6 +29,7 @@ sealed class PoseDecoder : MonoBehaviour
     const int Width = 640 + 1;
     const int Height = 352 + 1;
 
+    // The total count of the key points defined in the BodyPix model
     const int KeyPointCount = 17;
 
     #endregion
@@ -38,8 +39,7 @@ sealed class PoseDecoder : MonoBehaviour
     WebCamTexture _webcamRaw;
     RenderTexture _webcamBuffer;
     ComputeBuffer _preprocessed;
-    ComputeBuffer _argmaxes;
-    RenderTexture _offsets;
+    ComputeBuffer _keyPoints;
     Material _visualizer;
     IWorker _worker;
 
@@ -52,6 +52,7 @@ sealed class PoseDecoder : MonoBehaviour
         _webcamRaw = new WebCamTexture();
         _webcamBuffer = new RenderTexture(1920, 1080, 0);
         _preprocessed = new ComputeBuffer(Width * Height * 3, sizeof(float));
+        _keyPoints = new ComputeBuffer(KeyPointCount, sizeof(float) * 2);
         _visualizer = new Material(_visualizerShader);
         _worker = ModelLoader.Load(_model).CreateWorker();
 
@@ -63,8 +64,8 @@ sealed class PoseDecoder : MonoBehaviour
         _preprocessed?.Dispose();
         _preprocessed = null;
 
-        _argmaxes?.Dispose();
-        _argmaxes = null;
+        _keyPoints?.Dispose();
+        _keyPoints = null;
 
         _worker?.Dispose();
         _worker = null;
@@ -74,7 +75,6 @@ sealed class PoseDecoder : MonoBehaviour
     {
         if (_webcamRaw != null) Destroy(_webcamRaw);
         if (_webcamBuffer != null) Destroy(_webcamBuffer);
-        if (_offsets != null) Destroy(_offsets);
         if (_visualizer != null) Destroy(_visualizer);
     }
 
@@ -101,38 +101,36 @@ sealed class PoseDecoder : MonoBehaviour
         using (var tensor = new Tensor(1, Height, Width, 3, _preprocessed))
             _worker.Execute(tensor);
 
-        // Postprocessing for pose estimation
+        // Keypoint retrieval
+        var heatmaps3d = _worker.PeekOutput("float_heatmaps");
+        var offsets3d = _worker.PeekOutput("float_short_offsets");
+
+        var (mw, mh) = (heatmaps3d.shape.width, heatmaps3d.shape.height);
+
+        var heatmapsShape = new TensorShape(1, mh, mw * KeyPointCount, 1);
+        var offsetsShape = new TensorShape(1, mh, mw * KeyPointCount * 2, 1);
+        using (var heatmaps = heatmaps3d.Reshape(heatmapsShape))
+        using (var offsets = offsets3d.Reshape(offsetsShape))
         {
-            var tensor = _worker.PeekOutput("float_heatmaps");
-            var shape = tensor.shape;
-            var flat = new TensorShape(1, shape.height, shape.width * shape.channels, 1);
-            if (_argmaxes == null)
-                _argmaxes = new ComputeBuffer(KeyPointCount, sizeof(uint) * 2);
-            using (var flatten = tensor.Reshape(flat))
-            {
-                var rt = RenderTexture.GetTemporary(flat.width, flat.height, 0, RenderTextureFormat.RHalf);
-                flatten.ToRenderTexture(rt);
-                _decoder.SetTexture(0, "_Heatmaps", rt);
-                _decoder.SetBuffer(0, "_HeatmapPositions", _argmaxes);
-                _decoder.SetInts("_Dimensions", shape.width, shape.height);
-                _visualizer.SetInt("_ShapeX", shape.width);
-                _visualizer.SetInt("_ShapeY", shape.height);
-                _decoder.Dispatch(0, 1, 1, 1);
-                RenderTexture.ReleaseTemporary(rt);
-            }
+            var heatmapsRT = RenderTexture.GetTemporary(mw * KeyPointCount, mh, 0, RenderTextureFormat.RHalf);
+            var offsetsRT = RenderTexture.GetTemporary(mw * KeyPointCount * 2, mh, 0, RenderTextureFormat.RHalf);
+
+            heatmaps.ToRenderTexture(heatmapsRT);
+            offsets.ToRenderTexture(offsetsRT);
+
+            _decoder.SetTexture(0, "_Heatmaps", heatmapsRT);
+            _decoder.SetTexture(0, "_Offsets", offsetsRT);
+            _decoder.SetInts("_Dimensions", mw, mh);
+            _decoder.SetInt("_Stride", Width / mw + 1);
+            _decoder.SetBuffer(0, "_KeyPoints", _keyPoints);
+            _decoder.Dispatch(0, 1, 1, 1);
+
+            RenderTexture.ReleaseTemporary(heatmapsRT);
+            RenderTexture.ReleaseTemporary(offsetsRT);
         }
 
-        {
-            var tensor = _worker.PeekOutput("float_short_offsets");
-            var shape = tensor.shape;
-            var flat = new TensorShape(1, shape.height, shape.width * shape.channels, 1);
-            using (var flatten = tensor.Reshape(flat))
-            {
-                if (_offsets == null)
-                    _offsets = new RenderTexture(flat.width, flat.height, 0, RenderTextureFormat.RHalf);
-                flatten.ToRenderTexture(_offsets);
-            }
-        }
+        var stride = Width / mw + 1.0f;
+        _visualizer.SetVector("_Scale", new Vector2((Width + stride) / Width, (Height + stride) / Height));
     }
 
     void OnPostRender()
@@ -142,8 +140,7 @@ sealed class PoseDecoder : MonoBehaviour
         Graphics.DrawProceduralNow(MeshTopology.Quads, 4, 1);
 
         _visualizer.SetPass(1);
-        _visualizer.SetBuffer("_HeatmapPositions", _argmaxes);
-        _visualizer.SetTexture("_KeyPointOffsets", _offsets);
+        _visualizer.SetBuffer("_KeyPoints", _keyPoints);
         Graphics.DrawProceduralNow(MeshTopology.Quads, 4, KeyPointCount);
     }
 
