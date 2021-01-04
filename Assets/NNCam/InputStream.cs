@@ -25,8 +25,8 @@ sealed class InputStream : MonoBehaviour
     // We use a bit strange aspect ratio (20:11) because we have to use 16n+1
     // for these dimension values. It may distort input images a bit, but it
     // might not be a problem for the segmentation models.
-    public const int Width = 640 + 1;
-    public const int Height = 352 + 1;
+    const int Width = 640 + 1;
+    const int Height = 352 + 1;
 
     #endregion
 
