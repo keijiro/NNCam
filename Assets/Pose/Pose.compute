@@ -1,0 +1,35 @@
+#pragma kernel DecodePose
+
+#define PARTS_COUNT 17
+
+texture2D _Heatmaps;
+uint2 _Dimensions;
+RWBuffer<uint2> _HeatmapPositions;
+
+float SampleHeatmap(uint x, uint y, uint part)
+{
+    return _Heatmaps[uint2(x * PARTS_COUNT + part, y)].x;
+}
+
+[numthreads(PARTS_COUNT, 1, 1)]
+void DecodePose(uint3 id : SV_DispatchThreadID)
+{
+    uint2 max_pos = 0;
+    float max_score = 0;
+
+    for (uint v = 0; v < _Dimensions.y; v++)
+    {
+        for (uint u = 0; u < _Dimensions.x; u++)
+        {
+            uint2 pos = uint2(u, v);
+            float score = SampleHeatmap(pos.x, pos.y, id.x);
+            if (score > max_score)
+            {
+                max_pos = pos;
+                max_score = score;
+            }
+        }
+    }
+
+    _HeatmapPositions[id.x] = max_pos;
+}
