@@ -2,7 +2,7 @@
 #pragma kernel PreprocessResNet50
 
 sampler2D _Texture;
-RWBuffer<float3> _Tensor;
+RWBuffer<float> _Tensor;
 uint _Width, _Height;
 
 float3 SampleInput(uint3 id)
