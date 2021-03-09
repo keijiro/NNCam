@@ -104,15 +104,13 @@ sealed class InputStream : MonoBehaviour
 
         // BodyPix output retrieval
         var output = _worker.PeekOutput("float_segments");
-        var (w, h) = (output.shape.sequenceLength, output.shape.height);
-        using (var segs = output.Reshape(new TensorShape(1, h, w, 1)))
-        {
-            // Bake into a render texture with normalizing into [0, 1].
-            var segsRT = segs.ToRenderTexture(0, 0, 1.0f / 32, 0.5f);
-            // Postprocessing shader invocation
-            Graphics.Blit(segsRT, _postprocessed, _postprocessor);
-            Destroy(segsRT);
-        }
+
+        // Bake into a render texture with normalizing into [0, 1].
+        var segsRT = output.ToRenderTexture(0, 0, 1.0f / 32, 0.5f);
+
+        // Postprocessing shader invocation
+        Graphics.Blit(segsRT, _postprocessed, _postprocessor);
+        Destroy(segsRT);
     }
 
     #endregion
