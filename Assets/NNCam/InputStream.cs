@@ -55,7 +55,7 @@ sealed class InputStream : MonoBehaviour
         _webcamRaw = new WebCamTexture();
         _webcamBuffer = new RenderTexture(1920, 1080, 0);
         _preprocessed = new ComputeBuffer(Width * Height * 3, sizeof(float));
-        _postprocessed = Util.NewSingleChannelRT(1920, 1000);
+        _postprocessed = Util.NewSingleChannelRT(1920, 1080);
         _postprocessor = new Material(_postprocessShader);
         _worker = ModelLoader.Load(_model).CreateWorker();
 
