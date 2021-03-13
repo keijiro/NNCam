@@ -28,6 +28,9 @@ public sealed class Effector2 : MonoBehaviour
 
     #region MonoBehaviour implementation
 
+    void OnValidate()
+      => _upperThreshold = Mathf.Max(_upperThreshold, _lowerThreshold);
+
     void Start()
     {
         _tempRT = new RenderTexture(1920, 1080, 0);
