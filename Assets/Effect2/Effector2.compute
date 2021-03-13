@@ -1,0 +1,74 @@
+#pragma kernel PixelSortEffect
+
+//
+// BodyPix effect example 2: Pixel sorting with person segmentation
+//
+
+Texture2D<float4> _MainTex;
+Texture2D<float> _MaskTex;
+RWTexture2D<float4> _OutTex;
+float3 _Threshold;
+uint _Width;
+
+float Luma(float3 rgb)
+{
+    return saturate(dot(rgb, float3(0.2126729, 0.7151522, 0.0721750)));
+}
+
+// Search for starting point
+uint Search(uint x, uint y)
+{
+    for (;x < _Width; x++)
+    {
+        float3 color = _MainTex[uint2(x, y)].rgb;
+        float mask = _MaskTex[uint2(x, y)].r;
+
+        if (mask > _Threshold.x && Luma(color) < _Threshold.y) break;
+
+        _OutTex[uint2(x, y)] = float4(color, 1);
+    }
+    return x;
+}
+
+// Determine the span and do sorting
+uint SortPixels(uint x0, uint y)
+{
+    uint count[256], pos[256];
+
+    // We only have to initialize the count array.
+    for (uint i = 0; i < 256; i++) count[i] = 0;
+
+    // Counting loop
+    for (uint x = x0; x < _Width; x++)
+    {
+        float luma = Luma(_MainTex[uint2(x, y)].rgb);
+        float mask = _MaskTex[uint2(x, y)].r;
+
+        if (mask < _Threshold.x || luma > _Threshold.z) break;
+
+        i = luma * 255;
+        count[i]++;
+        pos[i] = x;
+    }
+
+    // Output loop
+    for (i = 0, x = x0; i < 256; i++)
+    {
+        float4 color = _MainTex[uint2(pos[i], y)];
+        for (uint c = 0; c < count[i]; c++)
+          _OutTex[uint2(x++, y)] = color;
+    }
+
+    return x;
+}
+
+[numthreads(24, 1, 1)]
+void PixelSortEffect(uint y : SV_DispatchThreadID)
+{
+    for (uint x = 0; x < _Width; )
+    {
+        x = Search(x, y);
+        if (x >= _Width) return;
+        x = SortPixels(x, y);
+    }
+}
