@@ -10,9 +10,10 @@ public sealed class Effector2 : MonoBehaviour
     #region Editor only attributes
 
     [SerializeField] InputStream _inputStream = null;
-    [SerializeField, Range(0, 1)] float _maskThreshold = 0.3f;
-    [SerializeField, Range(0, 1)] float _lowerThreshold = 0.3f;
-    [SerializeField, Range(0, 1)] float _upperThreshold = 0.5f;
+    [SerializeField, Range(0, 1)] float _maskLower = 0.3f;
+    [SerializeField, Range(0, 1)] float _maskUpper = 0.5f;
+    [SerializeField, Range(0, 1)] float _lumaLower = 0.3f;
+    [SerializeField, Range(0, 1)] float _lumaUpper = 0.5f;
     [SerializeField, HideInInspector] ComputeShader _compute = null;
 
     #endregion
@@ -21,16 +22,18 @@ public sealed class Effector2 : MonoBehaviour
 
     RenderTexture _tempRT;
 
-    Vector3 ThresholdVector
-      => new Vector3(_maskThreshold, _lowerThreshold, _upperThreshold);
+    Vector4 ThresholdVector
+      => new Vector4(_maskLower, _lumaLower, _maskUpper, _lumaUpper);
 
     #endregion
 
     #region MonoBehaviour implementation
 
     void OnValidate()
-      => _upperThreshold = Mathf.Max(_upperThreshold, _lowerThreshold);
-
+    {
+        _maskUpper = Mathf.Max(_maskLower, _maskUpper);
+        _lumaUpper = Mathf.Max(_lumaLower, _lumaUpper);
+    }
     void Start()
     {
         _tempRT = new RenderTexture(1920, 1080, 0);

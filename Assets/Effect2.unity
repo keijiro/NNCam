@@ -212,6 +212,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inputStream: {fileID: 423862738}
+  _maskLower: 0.1
+  _maskUpper: 0.8
+  _lumaLower: 0.4
+  _lumaUpper: 0.75
   _compute: {fileID: 7200000, guid: 55a6baf58b2bc244e8efd857deb9cd12, type: 3}
 --- !u!114 &423862738
 MonoBehaviour:

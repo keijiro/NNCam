@@ -7,7 +7,7 @@
 Texture2D<float4> _MainTex;
 Texture2D<float> _MaskTex;
 RWTexture2D<float4> _OutTex;
-float3 _Threshold;
+float4 _Threshold;
 uint _Width;
 
 float Luma(float3 rgb)
@@ -23,7 +23,7 @@ uint Search(uint x, uint y)
         float3 color = _MainTex[uint2(x, y)].rgb;
         float mask = _MaskTex[uint2(x, y)].r;
 
-        if (mask > _Threshold.x && Luma(color) < _Threshold.y) break;
+        if (mask > _Threshold.z && Luma(color) < _Threshold.y) break;
 
         _OutTex[uint2(x, y)] = float4(color, 1);
     }
@@ -44,7 +44,7 @@ uint SortPixels(uint x0, uint y)
         float luma = Luma(_MainTex[uint2(x, y)].rgb);
         float mask = _MaskTex[uint2(x, y)].r;
 
-        if (mask < _Threshold.x || luma > _Threshold.z) break;
+        if (mask < _Threshold.x || luma > _Threshold.w) break;
 
         i = luma * 255;
         count[i]++;
