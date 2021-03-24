@@ -4,9 +4,7 @@ MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences:
-  - _model: {instanceID: 0}
-  - _preprocessor: {fileID: 7200000, guid: 326c8a5b8ac30474eb880d89c9b67fbe, type: 3}
-  - _postprocessShader: {fileID: 4800000, guid: 263d3f72334a1d146abbb50483d18d64, type: 3}
+  - _resources: {fileID: 11400000, guid: fb70c5c0580b3fa4e929753f5f92bf3f, type: 2}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

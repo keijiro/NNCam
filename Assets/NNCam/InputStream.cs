@@ -5,18 +5,9 @@ namespace NNCam {
 
 sealed class InputStream : MonoBehaviour
 {
-    #region Enum definitions
-
-    enum Architecture { MobileNetV1, ResNet50 }
-
-    #endregion
-
     #region Editable attributes
 
-    [SerializeField] Architecture _architecture = Architecture.MobileNetV1;
-    [SerializeField] Unity.Barracuda.NNModel _model = null;
-    [SerializeField, HideInInspector] ComputeShader _preprocessor = null;
-    [SerializeField, HideInInspector] Shader _postprocessShader = null;
+    [SerializeField] ResourceSet _resources = null;
 
     #endregion
 
@@ -56,8 +47,8 @@ sealed class InputStream : MonoBehaviour
         _webcamBuffer = new RenderTexture(1920, 1080, 0);
         _preprocessed = new ComputeBuffer(Width * Height * 3, sizeof(float));
         _postprocessed = Util.NewSingleChannelRT(1920, 1080);
-        _postprocessor = new Material(_postprocessShader);
-        _worker = ModelLoader.Load(_model).CreateWorker();
+        _postprocessor = new Material(_resources.postprocess);
+        _worker = ModelLoader.Load(_resources.model).CreateWorker();
 
         _webcamRaw.Play();
     }
@@ -91,12 +82,13 @@ sealed class InputStream : MonoBehaviour
         Graphics.Blit(_webcamRaw, _webcamBuffer, scale, offset);
 
         // Preprocessing for BodyPix
-        var kernel = (int)_architecture;
-        _preprocessor.SetTexture(kernel, "_Texture", _webcamBuffer);
-        _preprocessor.SetBuffer(kernel, "_Tensor", _preprocessed);
-        _preprocessor.SetInt("_Width", Width);
-        _preprocessor.SetInt("_Height", Height);
-        _preprocessor.Dispatch(kernel, Width / 8 + 1, Height / 8 + 1, 1);
+        var pre = _resources.preprocess;
+        var kernel = (int)_resources.architecture;
+        pre.SetTexture(kernel, "_Texture", _webcamBuffer);
+        pre.SetBuffer(kernel, "_Tensor", _preprocessed);
+        pre.SetInt("_Width", Width);
+        pre.SetInt("_Height", Height);
+        pre.Dispatch(kernel, Width / 8 + 1, Height / 8 + 1, 1);
 
         // BodyPix invocation
         using (var tensor = new Tensor(1, Height, Width, 3, _preprocessed))
