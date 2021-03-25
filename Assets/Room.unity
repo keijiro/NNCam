@@ -133,7 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 423862736}
   - component: {fileID: 423862735}
-  - component: {fileID: 423862738}
+  - component: {fileID: 423862739}
   - component: {fileID: 423862737}
   m_Layer: 0
   m_Name: Camera
@@ -211,11 +211,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4b35d6f5017da143bfb4ffbccea249e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _inputStream: {fileID: 423862738}
+  _input: {fileID: 423862739}
   _background: {fileID: 2800000, guid: d017ae28e6d8fd445b8a955069fd35ab, type: 3}
   _threshold: 0.5
+  _resources: {fileID: 11400000, guid: fb70c5c0580b3fa4e929753f5f92bf3f, type: 2}
   _shader: {fileID: 4800000, guid: d2fdc31d3b1e1934394f08a3e0b1921f, type: 3}
---- !u!114 &423862738
+--- !u!114 &423862739
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -224,7 +225,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 423862734}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b612fc1cf81f3f409219c272953994c, type: 3}
+  m_Script: {fileID: 11500000, guid: a226377011916cd44863133d87a746da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _resources: {fileID: 11400000, guid: fb70c5c0580b3fa4e929753f5f92bf3f, type: 2}
+  _deviceName: 

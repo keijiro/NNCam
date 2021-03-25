@@ -2,29 +2,52 @@ using UnityEngine;
 
 namespace NNCam {
 
-sealed class Compositor : MonoBehaviour
+public sealed class Compositor : MonoBehaviour
 {
-    [SerializeField] InputStream _inputStream = null;
+    #region Editable attributes
+
+    [SerializeField] WebcamInput _input = null;
     [SerializeField] Texture2D _background = null;
     [SerializeField, Range(0.01f, 0.99f)] float _threshold = .5f;
-    [SerializeField, HideInInspector] Shader _shader = null;
+    [SerializeField] ResourceSet _resources = null;
+    [SerializeField] Shader _shader = null;
 
+    #endregion
+
+    #region Internal objects
+
+    SegmentationFilter _filter;
     Material _material;
+
+    #endregion
+
+    #region MonoBehaviour implementation
+
+    void Start()
+    {
+        _filter = new SegmentationFilter(_resources);
+        _material = new Material(_shader);
+    }
 
     void OnDestroy()
     {
-        if (_material != null) Destroy(_material);
+        _filter.Dispose();
+        Destroy(_material);
     }
+
+    void Update()
+      => _filter.ProcessImage(_input.Texture);
 
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
-        if (_material == null) _material = new Material(_shader);
         _material.SetTexture("_Background", _background);
-        _material.SetTexture("_CameraFeed", _inputStream.CameraTexture);
-        _material.SetTexture("_Mask", _inputStream.MaskTexture);
+        _material.SetTexture("_CameraFeed", _input.Texture);
+        _material.SetTexture("_Mask", _filter.MaskTexture);
         _material.SetFloat("_Threshold", _threshold);
         Graphics.Blit(null, destination, _material, 0);
     }
+
+    #endregion
 }
 
 } // namespace NNCam

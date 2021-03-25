@@ -6,8 +6,9 @@ public sealed class Effector : MonoBehaviour
 {
     #region Editor only attributes
 
-    [SerializeField] InputStream _inputStream = null;
-    [SerializeField, HideInInspector] Shader _shader = null;
+    [SerializeField] WebcamInput _input = null;
+    [SerializeField] ResourceSet _resources = null;
+    [SerializeField] Shader _shader = null;
 
     #endregion
 
@@ -47,6 +48,7 @@ public sealed class Effector : MonoBehaviour
     Vector3 NoiseParamsVector
       => new Vector3(_noiseFrequency, _noiseSpeed, _noiseAmount / 1000);
 
+    SegmentationFilter _filter;
     (RenderTexture rt1, RenderTexture rt2) _buffer;
     Material _material;
 
@@ -56,6 +58,7 @@ public sealed class Effector : MonoBehaviour
 
     void Start()
     {
+        _filter = new SegmentationFilter(_resources);
         _material = new Material(_shader);
         _buffer.rt1 = NewBuffer();
         _buffer.rt2 = NewBuffer();
@@ -63,26 +66,30 @@ public sealed class Effector : MonoBehaviour
 
     void OnDestroy()
     {
+        _filter.Dispose();
         Destroy(_material);
         Destroy(_buffer.rt1);
         Destroy(_buffer.rt2);
     }
 
-    void OnRenderImage(RenderTexture source, RenderTexture destination)
+    void Update()
     {
+        // Segmentation filter
+        _filter.ProcessImage(_input.Texture);
+
         // Effector shader
         _material.SetTexture("_FeedbackTex", _buffer.rt1);
-        _material.SetTexture("_MaskTex", _inputStream.MaskTexture);
+        _material.SetTexture("_MaskTex", _filter.MaskTexture);
         _material.SetVector("_Feedback", FeedbackParamsVector);
         _material.SetVector("_Noise", NoiseParamsVector);
-        Graphics.Blit(_inputStream.CameraTexture, _buffer.rt2, _material, 0);
-
-        // Final blit
-        Graphics.Blit(_buffer.rt2, destination);
+        Graphics.Blit(_input.Texture, _buffer.rt2, _material, 0);
 
         // Double buffer swapping
         _buffer = (_buffer.rt2, _buffer.rt1);
     }
+
+    void OnRenderImage(RenderTexture source, RenderTexture destination)
+      => Graphics.Blit(_buffer.rt1, destination);
 
     #endregion
 }

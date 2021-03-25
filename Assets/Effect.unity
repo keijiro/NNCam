@@ -211,7 +211,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c0f61d745edc6448013ca652a250fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _inputStream: {fileID: 423862738}
+  _input: {fileID: 423862738}
+  _resources: {fileID: 11400000, guid: fb70c5c0580b3fa4e929753f5f92bf3f, type: 2}
   _shader: {fileID: 4800000, guid: 4d4d27379aecc9d41aef1fa959c0cc69, type: 3}
   _feedbackLength: 3
   _feedbackDecay: 1
@@ -227,7 +228,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 423862734}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b612fc1cf81f3f409219c272953994c, type: 3}
+  m_Script: {fileID: 11500000, guid: a226377011916cd44863133d87a746da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _resources: {fileID: 11400000, guid: fb70c5c0580b3fa4e929753f5f92bf3f, type: 2}
+  _deviceName: 
